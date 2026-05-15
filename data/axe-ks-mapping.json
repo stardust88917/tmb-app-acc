@@ -1,0 +1,277 @@
+{
+  "ksItems": [
+    {
+      "code": "1.1.1",
+      "name": "적절한 대체 텍스트 제공",
+      "principle": "인식의 용이성",
+      "guideline": "1.1 대체 텍스트",
+      "priority": "high",
+      "description": "이미지 등 비텍스트 콘텐츠에는 그 의미나 용도를 인식할 수 있도록 대체 텍스트를 제공해야 한다."
+    },
+    {
+      "code": "1.2.1",
+      "name": "자막 제공",
+      "principle": "인식의 용이성",
+      "guideline": "1.2 멀티미디어 대체 수단",
+      "priority": "high",
+      "description": "멀티미디어 콘텐츠에는 자막, 대본 또는 수어를 제공해야 한다."
+    },
+    {
+      "code": "1.3.1",
+      "name": "색에 무관한 콘텐츠 인식",
+      "principle": "인식의 용이성",
+      "guideline": "1.3 명료성",
+      "priority": "high",
+      "description": "콘텐츠는 색에 관계없이 인식될 수 있어야 한다."
+    },
+    {
+      "code": "1.3.2",
+      "name": "명확한 지시사항 제공",
+      "principle": "인식의 용이성",
+      "guideline": "1.3 명료성",
+      "priority": "medium",
+      "description": "지시사항은 모양, 크기, 위치, 방향, 색, 소리 등에 관계없이 인식될 수 있어야 한다."
+    },
+    {
+      "code": "1.3.3",
+      "name": "텍스트 콘텐츠의 명도 대비",
+      "principle": "인식의 용이성",
+      "guideline": "1.3 명료성",
+      "priority": "high",
+      "description": "텍스트 콘텐츠와 배경 간의 명도 대비는 4.5:1 이상이어야 한다."
+    },
+    {
+      "code": "1.3.4",
+      "name": "자동 재생 금지",
+      "principle": "인식의 용이성",
+      "guideline": "1.3 명료성",
+      "priority": "medium",
+      "description": "자동으로 소리가 재생되지 않아야 한다."
+    },
+    {
+      "code": "1.3.5",
+      "name": "콘텐츠 간의 구분",
+      "principle": "인식의 용이성",
+      "guideline": "1.3 명료성",
+      "priority": "low",
+      "description": "이웃한 콘텐츠는 시각적으로 구분될 수 있어야 한다."
+    },
+    {
+      "code": "2.1.1",
+      "name": "키보드 사용 보장",
+      "principle": "운용의 용이성",
+      "guideline": "2.1 입력장치 접근성",
+      "priority": "high",
+      "description": "모든 기능은 키보드만으로도 사용할 수 있어야 한다."
+    },
+    {
+      "code": "2.1.2",
+      "name": "초점 이동",
+      "principle": "운용의 용이성",
+      "guideline": "2.1 입력장치 접근성",
+      "priority": "high",
+      "description": "키보드에 의한 초점은 논리적으로 이동해야 하며, 시각적으로 구별할 수 있어야 한다."
+    },
+    {
+      "code": "2.1.3",
+      "name": "조작 가능",
+      "principle": "운용의 용이성",
+      "guideline": "2.1 입력장치 접근성",
+      "priority": "medium",
+      "description": "사용자 입력 및 컨트롤은 조작 가능하도록 제공되어야 한다."
+    },
+    {
+      "code": "2.2.1",
+      "name": "응답시간 조절",
+      "principle": "운용의 용이성",
+      "guideline": "2.2 충분한 시간 제공",
+      "priority": "medium",
+      "description": "시간 제한이 있는 콘텐츠는 응답시간을 조절할 수 있어야 한다."
+    },
+    {
+      "code": "2.2.2",
+      "name": "정지 기능 제공",
+      "principle": "운용의 용이성",
+      "guideline": "2.2 충분한 시간 제공",
+      "priority": "medium",
+      "description": "자동으로 변경되는 콘텐츠는 움직임을 제어할 수 있어야 한다."
+    },
+    {
+      "code": "2.3.1",
+      "name": "깜박임과 번쩍임 사용 제한",
+      "principle": "운용의 용이성",
+      "guideline": "2.3 광과민성 발작 예방",
+      "priority": "high",
+      "description": "초당 3~50회 주기로 깜박이거나 번쩍이는 콘텐츠를 제공하지 않아야 한다."
+    },
+    {
+      "code": "2.4.1",
+      "name": "반복 영역 건너뛰기",
+      "principle": "운용의 용이성",
+      "guideline": "2.4 쉬운 내비게이션",
+      "priority": "medium",
+      "description": "콘텐츠의 반복되는 영역은 건너뛸 수 있어야 한다."
+    },
+    {
+      "code": "2.4.2",
+      "name": "제목 제공",
+      "principle": "운용의 용이성",
+      "guideline": "2.4 쉬운 내비게이션",
+      "priority": "medium",
+      "description": "페이지, 프레임, 콘텐츠 블록에는 적절한 제목을 제공해야 한다."
+    },
+    {
+      "code": "2.4.3",
+      "name": "적절한 링크 텍스트",
+      "principle": "운용의 용이성",
+      "guideline": "2.4 쉬운 내비게이션",
+      "priority": "high",
+      "description": "링크 텍스트는 용도나 목적을 이해할 수 있도록 제공해야 한다."
+    },
+    {
+      "code": "3.1.1",
+      "name": "기본 언어 표시",
+      "principle": "이해의 용이성",
+      "guideline": "3.1 가독성",
+      "priority": "medium",
+      "description": "주로 사용하는 언어를 명시해야 한다."
+    },
+    {
+      "code": "3.2.1",
+      "name": "사용자 요구에 따른 실행",
+      "principle": "이해의 용이성",
+      "guideline": "3.2 예측 가능성",
+      "priority": "medium",
+      "description": "사용자가 의도하지 않은 기능(새 창, 초점 변화 등)은 실행되지 않아야 한다."
+    },
+    {
+      "code": "3.3.1",
+      "name": "콘텐츠의 선형 구조",
+      "principle": "이해의 용이성",
+      "guideline": "3.3 콘텐츠의 논리성",
+      "priority": "medium",
+      "description": "콘텐츠는 논리적인 순서로 제공해야 한다."
+    },
+    {
+      "code": "3.3.2",
+      "name": "표의 구성",
+      "principle": "이해의 용이성",
+      "guideline": "3.3 콘텐츠의 논리성",
+      "priority": "medium",
+      "description": "표는 이해하기 쉽게 구성해야 한다."
+    },
+    {
+      "code": "3.4.1",
+      "name": "레이블 제공",
+      "principle": "이해의 용이성",
+      "guideline": "3.4 입력 도움",
+      "priority": "high",
+      "description": "입력 서식에는 레이블을 제공해야 한다."
+    },
+    {
+      "code": "3.4.2",
+      "name": "오류 정정",
+      "principle": "이해의 용이성",
+      "guideline": "3.4 입력 도움",
+      "priority": "medium",
+      "description": "입력 오류를 정정할 수 있는 방법을 제공해야 한다."
+    },
+    {
+      "code": "4.1.1",
+      "name": "마크업 오류 방지",
+      "principle": "견고성",
+      "guideline": "4.1 문법 준수",
+      "priority": "medium",
+      "description": "마크업 언어의 요소는 열고 닫음, 중첩 관계, 속성 선언에 오류가 없어야 한다."
+    },
+    {
+      "code": "4.2.1",
+      "name": "웹 애플리케이션 접근성 준수",
+      "principle": "견고성",
+      "guideline": "4.2 웹 애플리케이션 접근성",
+      "priority": "high",
+      "description": "콘텐츠에 WAI-ARIA를 사용한 경우, 해당 기술 사양을 준수해야 한다."
+    },
+    {
+      "code": "8.1-01",
+      "name": "접근성 모범 사례",
+      "principle": "모범 사례",
+      "guideline": "KS 외 권고",
+      "priority": "low",
+      "description": "KS X 3253:2016에 직접 명시되지 않으나 접근성 향상을 위해 권고되는 항목."
+    }
+  ],
+  "axeRuleMapping": {
+    "image-alt": "1.1.1",
+    "input-image-alt": "1.1.1",
+    "area-alt": "1.1.1",
+    "object-alt": "1.1.1",
+    "role-img-alt": "1.1.1",
+    "svg-img-alt": "1.1.1",
+    "image-redundant-alt": "1.1.1",
+    "video-caption": "1.2.1",
+    "audio-caption": "1.2.1",
+    "color-contrast": "1.3.3",
+    "color-contrast-enhanced": "1.3.3",
+    "keyboard": "2.1.1",
+    "scrollable-region-focusable": "2.1.1",
+    "focus-trap": "2.1.2",
+    "focus-order-semantics": "2.1.2",
+    "tabindex": "2.1.2",
+    "skip-link": "2.4.1",
+    "bypass": "2.4.1",
+    "document-title": "2.4.2",
+    "frame-title": "2.4.2",
+    "frame-focusable-content": "2.4.2",
+    "heading-order": "2.4.2",
+    "page-has-heading-one": "2.4.2",
+    "link-name": "2.4.3",
+    "link-in-text-block": "2.4.3",
+    "html-has-lang": "3.1.1",
+    "html-lang-valid": "3.1.1",
+    "valid-lang": "3.1.1",
+    "table-duplicate-name": "3.3.2",
+    "th-has-data-cells": "3.3.2",
+    "td-headers-attr": "3.3.2",
+    "scope-attr-valid": "3.3.2",
+    "table-fake-caption": "3.3.2",
+    "td-has-no-scope": "3.3.2",
+    "label": "3.4.1",
+    "label-title-only": "3.4.1",
+    "label-content-name-mismatch": "3.4.1",
+    "select-name": "3.4.1",
+    "aria-input-field-name": "3.4.1",
+    "duplicate-id-active": "4.1.1",
+    "duplicate-id": "4.1.1",
+    "duplicate-id-aria": "4.1.1",
+    "aria-allowed-attr": "4.2.1",
+    "aria-required-children": "4.2.1",
+    "aria-required-parent": "4.2.1",
+    "aria-roles": "4.2.1",
+    "aria-valid-attr": "4.2.1",
+    "aria-valid-attr-value": "4.2.1",
+    "aria-hidden-body": "4.2.1",
+    "aria-hidden-focus": "4.2.1",
+    "aria-required-attr": "4.2.1",
+    "aria-prohibited-attr": "4.2.1",
+    "aria-conditional-attr": "4.2.1",
+    "aria-deprecated-role": "4.2.1",
+    "aria-allowed-role": "4.2.1",
+    "meta-refresh": "8.1-01",
+    "meta-viewport": "8.1-01",
+    "autocomplete-valid": "8.1-01",
+    "empty-heading": "8.1-01",
+    "listitem": "8.1-01",
+    "list": "8.1-01",
+    "definition-list": "8.1-01",
+    "dlitem": "8.1-01",
+    "landmark-one-main": "8.1-01",
+    "region": "8.1-01",
+    "avoid-inline-spacing": "8.1-01",
+    "css-orientation-lock": "8.1-01",
+    "scrollable-region-focusable": "8.1-01",
+    "presentational-role-conflict": "8.1-01",
+    "identical-links-same-purpose": "8.1-01",
+    "has-lang": "3.1.1"
+  }
+}
