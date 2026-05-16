@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+# T 멤버십 접근성 검수 도구
+
+KS X 3253:2016 기준 정적 분석 도구. URL 입력 → 14개 룰 검사 → 엑셀 export.
+
+## 실행
+npm install && npm run dev
+
+## 참고
+설계서: ../00_접근성_검수_도구_MVP_설계서.md
