@@ -29,7 +29,7 @@ export default function ResultPage() {
       const res = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: result.id }),
+        body: JSON.stringify(result),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? "실패"); }
       const blob = await res.blob();

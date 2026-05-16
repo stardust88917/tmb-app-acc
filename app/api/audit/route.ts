@@ -1,5 +1,4 @@
 import { runAudit, runAuditFromHtml } from "@/lib/runner";
-import { saveResult } from "@/lib/result-store";
 
 export const maxDuration = 30;
 
@@ -26,7 +25,6 @@ export async function POST(request: Request) {
     try {
       const html = await file.text();
       const result = await runAuditFromHtml(html, file.name);
-      saveResult(result);
       return Response.json({ id: result.id, result });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "검수 실패";
@@ -58,7 +56,6 @@ export async function POST(request: Request) {
 
   try {
     const result = await runAudit(url);
-    saveResult(result);
     return Response.json({ id: result.id, result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "검수 실패";
