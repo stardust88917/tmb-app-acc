@@ -10,39 +10,38 @@ export default function AuditForm() {
   const [status, setStatus] = useState<"idle" | "running" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [progress, setProgress] = useState(0);
-  const [progressLabel, setProgressLabel] = useState("");
+  const [label, setLabel] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim()) return;
+    const trimmed = url.trim();
+    if (!trimmed) return;
 
     setStatus("running");
     setErrorMsg("");
-    setProgress(10);
-    setProgressLabel("브라우저 실행 중...");
+    setProgress(15);
+    setLabel("HTML 가져오는 중...");
 
     const steps = [
-      { pct: 25, label: "페이지 로딩 중..." },
-      { pct: 50, label: "axe-core 검사 실행 중..." },
-      { pct: 75, label: "KS X 3253 항목 매핑 중..." },
-      { pct: 90, label: "결과 정리 중..." },
+      { pct: 35, label: "cheerio 파싱 중..." },
+      { pct: 60, label: "14개 룰 검사 중..." },
+      { pct: 85, label: "KS X 3253 매핑 중..." },
     ];
-    let stepIdx = 0;
+    let idx = 0;
     const timer = setInterval(() => {
-      if (stepIdx < steps.length) {
-        setProgress(steps[stepIdx].pct);
-        setProgressLabel(steps[stepIdx].label);
-        stepIdx++;
+      if (idx < steps.length) {
+        setProgress(steps[idx].pct);
+        setLabel(steps[idx].label);
+        idx++;
       }
-    }, 3000);
+    }, 2500);
 
     try {
       const res = await fetch("/api/audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: trimmed }),
       });
-
       clearInterval(timer);
 
       if (!res.ok) {
@@ -50,12 +49,11 @@ export default function AuditForm() {
         throw new Error(data.error ?? "검수 실패");
       }
 
-      const data = await res.json() as { id: string; result: AuditResult };
+      const data = (await res.json()) as { id: string; result: AuditResult };
       setProgress(100);
-      setProgressLabel("완료!");
-
+      setLabel("완료!");
       sessionStorage.setItem(`audit_${data.id}`, JSON.stringify(data.result));
-      setTimeout(() => router.push(`/result/${data.id}`), 400);
+      setTimeout(() => router.push(`/result/${data.id}`), 300);
     } catch (err) {
       clearInterval(timer);
       setStatus("error");
@@ -66,36 +64,30 @@ export default function AuditForm() {
 
   if (status === "running") {
     return (
-      <div className="flex flex-col items-center gap-6 py-10">
+      <div className="flex flex-col items-center gap-6 py-8">
         <div className="text-center">
-          <p className="text-lg font-semibold text-gray-700 mb-1">접근성 검수 진행 중</p>
-          <p className="text-sm text-gray-500 mb-1 truncate max-w-sm">{url}</p>
-          <p className="text-sm text-blue-600">{progressLabel}</p>
+          <p className="text-base font-semibold text-gray-700 mb-1">정적 접근성 분석 중</p>
+          <p className="text-sm text-gray-400 truncate max-w-xs mb-1">{url}</p>
+          <p className="text-sm text-blue-600">{label}</p>
         </div>
-
         <div className="w-full max-w-md">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>진행률</span>
-            <span>{progress}%</span>
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>진행률</span><span>{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-100 rounded-full h-2.5">
             <div
-              className="bg-blue-600 h-3 rounded-full transition-all duration-700 ease-out"
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-700"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
-
-        <div className="flex gap-2 text-sm text-gray-400">
-          <StepDot done={progress >= 25} label="브라우저" />
-          <span className="mt-1">→</span>
-          <StepDot done={progress >= 50} label="페이지 로딩" />
-          <span className="mt-1">→</span>
-          <StepDot done={progress >= 75} label="axe 검사" />
-          <span className="mt-1">→</span>
-          <StepDot done={progress >= 90} label="KS 매핑" />
-          <span className="mt-1">→</span>
-          <StepDot done={progress >= 100} label="완료" />
+        <div className="flex gap-3 text-xs text-gray-400">
+          {["fetch", "파싱", "룰 검사", "매핑", "완료"].map((s, i) => (
+            <div key={s} className="flex flex-col items-center gap-1">
+              <div className={`w-2.5 h-2.5 rounded-full ${progress >= (i + 1) * 18 ? "bg-blue-600" : "bg-gray-200"}`} />
+              <span>{s}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -115,7 +107,7 @@ export default function AuditForm() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com"
             required
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
@@ -128,26 +120,20 @@ export default function AuditForm() {
       </div>
 
       {status === "error" && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          <span className="mt-0.5">⚠️</span>
-          <span>{errorMsg}</span>
+        <div className="flex gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <span>⚠️</span><span>{errorMsg}</span>
         </div>
       )}
 
+      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 space-y-1">
+        <p className="font-semibold">📌 정적 분석 도구 안내</p>
+        <p>이 도구는 HTML을 직접 fetch하여 정적으로 분석합니다. 로그인이 필요한 페이지, JavaScript 렌더링 콘텐츠, 동적 상태 변화는 검사되지 않습니다.</p>
+        <p>동적 접근성 검사는 <strong>axe DevTools</strong> 또는 <strong>Playwright + axe-core</strong>를 사용하세요.</p>
+      </div>
+
       <p className="text-xs text-gray-400">
-        KS X 3253:2016 기준 32개 항목을 자동 검수합니다. 검수에는 약 15~30초 소요됩니다.
+        KS X 3253:2016 기준 14개 룰 정적 검사 · 약 5~10초 소요
       </p>
     </form>
-  );
-}
-
-function StepDot({ done, label }: { done: boolean; label: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className={`w-3 h-3 rounded-full mt-1 ${done ? "bg-blue-600" : "bg-gray-300"}`}
-      />
-      <span className="text-xs">{label}</span>
-    </div>
   );
 }

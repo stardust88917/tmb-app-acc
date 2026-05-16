@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["playwright", "@axe-core/playwright", "exceljs"],
+  serverExternalPackages: ["exceljs"],
 };
 
 export default nextConfig;
