@@ -30,8 +30,9 @@ export interface Rule {
   ksName: string;
   principle: Principle;
   guideline: string;
+  category: string;
   priority: Priority;
   isBestPractice: boolean;
   description: string;
-  check: ($: CheerioAPI) => CheckResult;
+  check: ($: CheerioAPI, htmlText?: string) => CheckResult;
 }

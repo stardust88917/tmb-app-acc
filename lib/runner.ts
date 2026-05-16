@@ -26,13 +26,14 @@ export async function runAudit(url: string): Promise<AuditResult> {
   // 3. 14개 룰 실행
   const ruleResults: RuleResult[] = allRules.map((rule) => {
     try {
-      const result = rule.check($);
+      const result = rule.check($, html);
       return {
         ruleId: rule.id,
         ksCode: rule.ksCode,
         ksName: rule.ksName,
         principle: rule.principle,
         guideline: rule.guideline,
+        category: rule.category,
         verdict: result.verdict,
         priority: rule.priority,
         issues: result.issues,
@@ -48,6 +49,7 @@ export async function runAudit(url: string): Promise<AuditResult> {
         ksName: rule.ksName,
         principle: rule.principle,
         guideline: rule.guideline,
+        category: rule.category,
         verdict: "검토필요" as const,
         priority: rule.priority,
         issues: [],

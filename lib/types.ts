@@ -20,6 +20,7 @@ export interface RuleResult {
   ksName: string;
   principle: Principle;
   guideline: string;
+  category: string;
   verdict: Verdict;
   priority: Priority;
   issues: Issue[];
