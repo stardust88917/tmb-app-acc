@@ -1,6 +1,15 @@
 import type { AuditResult } from "./types";
 
-const store = new Map<string, { result: AuditResult; expiresAt: number }>();
+// globalThis ensures the Map survives HMR reloads and is shared across
+// all route module instances within the same Node.js process.
+declare global {
+  // eslint-disable-next-line no-var
+  var __a11yResultStore: Map<string, { result: AuditResult; expiresAt: number }> | undefined;
+}
+
+const store: Map<string, { result: AuditResult; expiresAt: number }> =
+  (globalThis.__a11yResultStore ??= new Map());
+
 const TTL_MS = 60 * 60 * 1000; // 1시간
 
 export function saveResult(result: AuditResult): void {

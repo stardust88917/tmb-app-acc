@@ -93,18 +93,18 @@ async function addDetailSheet(wb: ExcelJS.Workbook, result: AuditResult) {
   });
 
   ws.columns = [
-    { header: "파일명", key: "fileName", width: 20 },
-    { header: "컴포넌트/화면명", key: "componentName", width: 20 },
-    { header: "검수 범주", key: "category", width: 18 },
-    { header: "검수 코드", key: "code", width: 12 },
-    { header: "검수 항목명", key: "itemName", width: 22 },
-    { header: "판정", key: "verdict", width: 14 },
-    { header: "이슈 위치", key: "issueLocation", width: 28 },
-    { header: "이슈 내용", key: "issueContent", width: 40 },
-    { header: "개선 방향", key: "improvement", width: 35 },
-    { header: "우선순위", key: "priority", width: 12 },
-    { header: "플랫폼", key: "platform", width: 10 },
-    { header: "비고", key: "notes", width: 20 },
+    { header: "파일명",        key: "fileName",      width: 20 },
+    { header: "컴포넌트/화면명", key: "componentName", width: 28 },
+    { header: "검수 범주",     key: "category",      width: 22 },
+    { header: "검수 코드",     key: "code",          width: 10 },
+    { header: "검수 항목명",   key: "itemName",      width: 24 },
+    { header: "판정",          key: "verdict",       width: 12 },
+    { header: "이슈 위치",     key: "issueLocation", width: 50 },
+    { header: "이슈 내용",     key: "issueContent",  width: 40 },
+    { header: "개선 방향",     key: "improvement",   width: 50 },
+    { header: "우선순위",      key: "priority",      width: 10 },
+    { header: "플랫폼",        key: "platform",      width:  8 },
+    { header: "비고",          key: "notes",         width: 30 },
   ];
 
   ws.getRow(1).eachCell((c) => {
@@ -127,7 +127,7 @@ async function addDetailSheet(wb: ExcelJS.Workbook, result: AuditResult) {
       const row = ws.addRow({
         fileName: hostname,
         componentName: "-",
-        category: rr.principle,
+        category: rr.category,
         code: rr.ksCode,
         itemName: rr.ksName,
         verdict: verdictLabel(rr.verdict),
@@ -146,7 +146,7 @@ async function addDetailSheet(wb: ExcelJS.Workbook, result: AuditResult) {
         const row = ws.addRow({
           fileName: hostname,
           componentName: "-",
-          category: rr.principle,
+          category: rr.category,
           code: rr.ksCode,
           itemName: rr.ksName,
           verdict: verdictLabel(rr.verdict),
@@ -163,7 +163,7 @@ async function addDetailSheet(wb: ExcelJS.Workbook, result: AuditResult) {
       if (rr.issues.length > 10) {
         const row = ws.addRow({
           fileName: hostname, componentName: "-",
-          category: rr.principle, code: rr.ksCode, itemName: rr.ksName,
+          category: rr.category, code: rr.ksCode, itemName: rr.ksName,
           verdict: verdictLabel(rr.verdict),
           issueLocation: `... 외 ${rr.issues.length - 10}건 더 있음`,
           issueContent: "", improvement: "",

@@ -10,20 +10,25 @@ const FETCH_HEADERS = {
   "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8",
 };
 
+export async function runAuditFromHtml(html: string, fileName: string): Promise<AuditResult> {
+  return runRules(html, fileName, 200);
+}
+
 export async function runAudit(url: string): Promise<AuditResult> {
-  // 1. HTML fetch
   const res = await fetch(url, {
     headers: FETCH_HEADERS,
     redirect: "follow",
     signal: AbortSignal.timeout(20_000),
   });
-
   const html = await res.text();
+  return runRules(html, url, res.status);
+}
 
-  // 2. cheerio 파싱
+async function runRules(html: string, sourceLabel: string, fetchStatus: number): Promise<AuditResult> {
+  // cheerio 파싱
   const $ = load(html);
 
-  // 3. 14개 룰 실행
+  // 14개 룰 실행
   const ruleResults: RuleResult[] = allRules.map((rule) => {
     try {
       const result = rule.check($, html);
@@ -67,9 +72,9 @@ export async function runAudit(url: string): Promise<AuditResult> {
 
   return {
     id: randomUUID(),
-    url,
+    url: sourceLabel,
     auditedAt: new Date().toISOString(),
-    fetchStatus: res.status,
+    fetchStatus,
     totalItems: ruleResults.length,
     passCount: ruleResults.filter((r) => r.verdict === "적합").length,
     failCount: ruleResults.filter((r) => r.verdict === "부적합").length,
