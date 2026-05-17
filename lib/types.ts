@@ -1,56 +1,68 @@
-export type Verdict = "적합" | "부적합" | "검토필요" | "해당없음";
-export type Priority = "high" | "medium" | "low";
-export type Principle =
-  | "인식의 용이성"
-  | "운용의 용이성"
-  | "이해의 용이성"
-  | "견고성"
-  | "모범 사례";
-
-export interface Issue {
+// ── 단일 위반 인스턴스 ─────────────────────────────────────────────────────
+export interface Violation {
   selector: string;
-  html: string;
+  snippet: string;
+  lineHint?: number;
   message: string;
-  suggestion: string;
 }
 
+// ── 자동 검사 룰 결과 (KS 항목에 매핑되기 전) ──────────────────────────────
 export interface RuleResult {
   ruleId: string;
   ksCode: string;
-  ksName: string;
-  principle: Principle;
-  guideline: string;
+  confidence: "high" | "medium" | "low";
+  violations: Violation[];
+}
+
+// ── KS X 3253:2016 34개 항목 중 하나의 최종 상태 ───────────────────────────
+export type KsVerdict = "pass" | "fail" | "review" | "manual" | "na";
+
+export interface ManualCheckGuide {
+  ksCode: string;
+  name: string;
+  guide: string;
+  checkPoints: string[];
+  tools: string[];
+  wcagRef: string;
+}
+
+export interface KsItemResult {
+  code: string;                  // e.g. "5.1-01"
+  name: string;                  // e.g. "이미지 대체 텍스트 제공"
+  principle: string;
   category: string;
-  verdict: Verdict;
-  priority: Priority;
-  issues: Issue[];
-  isBestPractice: boolean;
-  passCount: number;
-  checkedCount: number;
-  notes?: string;
+  severity: string;
+  autoCheckable: boolean;
+
+  // 자동 검사 항목
+  verdict: KsVerdict;
+  violations: Violation[];       // 위반 인스턴스 목록
+  ruleIds: string[];             // 해당 KS 코드를 담당하는 룰 ID들
+  confidence?: "high" | "medium" | "low";  // 가장 낮은 신뢰도
+  cssRequired?: boolean;         // CSS 없어서 검사 제한됨
+
+  // 수동 검사 항목
+  manualGuide?: ManualCheckGuide;
+
+  // 사용자 입력 (클라이언트측 수동 판정)
+  userVerdict?: "pass" | "fail" | "review";
+  userNote?: string;
 }
 
-export interface PrincipleSummary {
-  name: Principle;
-  total: number;
-  pass: number;
-  fail: number;
-  review: number;
-  na: number;
-  score: number;
-}
+// ── API 응답 전체 ──────────────────────────────────────────────────────────
+export interface AuditResponse {
+  source: string;             // URL 또는 파일명
+  auditDate: string;
+  inputMode: "url" | "file";
+  cssAnalyzed: boolean;
+  ksItems: KsItemResult[];    // 34개 항목
 
-export interface AuditResult {
-  id: string;
-  url: string;
-  auditedAt: string;
-  fetchStatus: number;
+  // 집계
   totalItems: number;
+  autoItems: number;
   passCount: number;
   failCount: number;
   reviewCount: number;
-  naCount: number;
-  overallScore: number;
-  principlesSummary: PrincipleSummary[];
-  ruleResults: RuleResult[];
+  manualCount: number;
+  overallScore: number;       // 자동 판정 항목 기준 0-100
 }

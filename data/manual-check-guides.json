@@ -1,0 +1,201 @@
+[
+  {
+    "ksCode": "5.2-01",
+    "name": "자막 제공",
+    "guide": "동영상 콘텐츠에 폐쇄 자막(CC) 또는 동기화된 대본을 제공하는지 확인하세요.",
+    "checkPoints": [
+      "video 요소에 <track kind=\"subtitles\"> 또는 <track kind=\"captions\">가 있는가",
+      "YouTube 등 외부 영상 삽입 시 자막 옵션이 활성화되어 있는가",
+      "자막 내용이 음성과 정확히 일치하는가",
+      "배경음·화자 식별 등 비언어 정보도 자막에 포함되는가"
+    ],
+    "tools": ["Chrome DevTools Elements 패널", "VoiceOver / NVDA"],
+    "wcagRef": "WCAG 1.2.2 Captions (Prerecorded)"
+  },
+  {
+    "ksCode": "5.2-02",
+    "name": "수어 제공",
+    "guide": "청각 장애인을 위해 수어 영상을 별도로 제공하거나 동영상 내에 수어 통역을 포함했는지 확인하세요.",
+    "checkPoints": [
+      "중요 동영상 콘텐츠 옆에 수어 통역 영상 링크가 있는가",
+      "수어 통역 영상의 화질이 충분히 선명한가",
+      "수어 통역자가 전체 발화 내용을 커버하는가"
+    ],
+    "tools": ["육안 확인"],
+    "wcagRef": "WCAG 1.2.6 Sign Language (Prerecorded)"
+  },
+  {
+    "ksCode": "5.3-01",
+    "name": "색에 무관한 콘텐츠 인식",
+    "guide": "색깔만으로 정보를 전달하지 않는지 확인하세요. 색 외에 텍스트·패턴·아이콘 등 추가 단서가 있어야 합니다.",
+    "checkPoints": [
+      "필수 입력 필드를 빨간 테두리 색만으로 표시하지 않는가",
+      "그래프·차트에서 범례가 색 외에 패턴·레이블을 사용하는가",
+      "링크가 색만으로 구분되는 경우 밑줄 등 다른 시각적 차이가 있는가",
+      "오류 메시지가 색만으로 표시되지 않고 텍스트로도 설명하는가"
+    ],
+    "tools": ["Chrome DevTools – 색약 시뮬레이션(Rendering 탭)", "Stark(Figma 플러그인)"],
+    "wcagRef": "WCAG 1.4.1 Use of Color"
+  },
+  {
+    "ksCode": "5.3-02",
+    "name": "명확한 지시 사항 제공",
+    "guide": "색·모양·위치·방향 등 감각적 특성에만 의존한 지시어를 사용하지 않는지 확인하세요.",
+    "checkPoints": [
+      "\"위 버튼을 클릭\", \"오른쪽 메뉴\" 등 위치 표현에 추가 텍스트 설명이 있는가",
+      "\"빨간 버튼\", \"둥근 아이콘\" 등 시각적 특성만으로 지칭하지 않는가",
+      "아이콘만 있는 버튼에 aria-label 또는 title이 존재하는가"
+    ],
+    "tools": ["스크린리더(NVDA·VoiceOver) 실제 탐색"],
+    "wcagRef": "WCAG 1.3.3 Sensory Characteristics"
+  },
+  {
+    "ksCode": "5.3-05",
+    "name": "콘텐츠 간의 구분",
+    "guide": "인접한 콘텐츠 블록이 시각적으로 충분히 구분되는지, 구분선·여백·배경색이 적절히 사용됐는지 확인하세요.",
+    "checkPoints": [
+      "리스트 항목 간 경계가 명확한가 (선·여백·배경 차이 등)",
+      "콘텐츠 영역이 색만으로 구분되지 않는가",
+      "카드·블록 사이에 충분한 여백 또는 구분선이 있는가"
+    ],
+    "tools": ["육안 확인", "Chrome DevTools Styles 패널"],
+    "wcagRef": "KS X 3253:2016 5.3.5"
+  },
+  {
+    "ksCode": "5.4-01",
+    "name": "배경음 사용 금지",
+    "guide": "페이지 로드 시 자동으로 배경음이 재생되거나, 3초 이상 지속되는 배경음이 있다면 정지/음소거 기능을 제공하는지 확인하세요.",
+    "checkPoints": [
+      "페이지 진입 시 자동 재생되는 오디오가 있는가",
+      "배경음이 있다면 볼륨 조절 또는 정지 버튼이 있는가",
+      "해당 컨트롤이 페이지 상단에 위치하거나 스크린리더로 쉽게 찾을 수 있는가"
+    ],
+    "tools": ["브라우저 직접 접근", "스크린리더"],
+    "wcagRef": "WCAG 1.4.2 Audio Control"
+  },
+  {
+    "ksCode": "5.5-01",
+    "name": "콘텐츠의 읽기 순서",
+    "guide": "CSS를 비활성화했을 때도 콘텐츠의 논리적 읽기 순서가 유지되는지 확인하세요.",
+    "checkPoints": [
+      "CSS position·float으로 인해 DOM 순서와 시각 순서가 다르지 않은가",
+      "스크린리더로 읽었을 때 의미가 자연스럽게 이어지는가",
+      "표의 셀 읽기 순서가 의미적으로 올바른가"
+    ],
+    "tools": ["Chrome DevTools – CSS 비활성화 (View → Toggle CSS)", "NVDA/VoiceOver 탐색"],
+    "wcagRef": "WCAG 1.3.2 Meaningful Sequence"
+  },
+  {
+    "ksCode": "6.1-01",
+    "name": "키보드 사용 보장",
+    "guide": "모든 기능을 키보드만으로 사용할 수 있는지 직접 탭 키로 탐색하면서 확인하세요.",
+    "checkPoints": [
+      "탭 키로 모든 인터랙티브 요소에 도달할 수 있는가",
+      "드롭다운·모달·슬라이더 등 복잡한 위젯이 키보드로 작동하는가",
+      "키보드 포커스가 특정 영역에 갇히는 키보드 트랩이 없는가 (모달 제외)",
+      "모달/팝업에서 Esc 키로 닫을 수 있는가"
+    ],
+    "tools": ["Tab/Shift+Tab/Enter/Space/Arrow 키 직접 조작"],
+    "wcagRef": "WCAG 2.1.1 Keyboard"
+  },
+  {
+    "ksCode": "6.1-03",
+    "name": "조작 가능 (터치 목표 크기)",
+    "guide": "터치 가능한 인터랙티브 요소의 최소 크기가 44×44px 이상인지 확인하세요.",
+    "checkPoints": [
+      "버튼·링크·폼 컨트롤의 터치 영역이 44×44px 이상인가",
+      "인접한 버튼 사이에 충분한 간격이 있는가 (최소 8px 이상)",
+      "아이콘 버튼의 실제 클릭 영역이 아이콘보다 충분히 큰가"
+    ],
+    "tools": ["Chrome DevTools – Elements 패널 크기 확인", "Axe DevTools"],
+    "wcagRef": "WCAG 2.5.5 Target Size"
+  },
+  {
+    "ksCode": "6.2-01",
+    "name": "응답 시간 조절",
+    "guide": "시간 제한이 있는 콘텐츠에서 사용자가 시간을 연장하거나 해제할 수 있는지 확인하세요.",
+    "checkPoints": [
+      "세션 만료 전 경고 알림이 표시되는가",
+      "시간 연장 버튼이 있고 최소 20초 전에 나타나는가",
+      "시간 제한을 완전히 끄는 옵션이 있는가",
+      "시간 제한이 필수적인 경우(경매 등)를 제외하고 항상 제어 가능한가"
+    ],
+    "tools": ["기능 직접 테스트"],
+    "wcagRef": "WCAG 2.2.1 Timing Adjustable"
+  },
+  {
+    "ksCode": "6.2-02",
+    "name": "정지 기능 제공",
+    "guide": "자동 스크롤·슬라이드쇼·애니메이션 등 움직이는 콘텐츠에 일시정지 또는 정지 기능이 있는지 확인하세요.",
+    "checkPoints": [
+      "배너 슬라이더에 일시정지 버튼이 있는가",
+      "자동 스크롤 콘텐츠를 정지할 수 있는가",
+      "정지 버튼이 키보드·스크린리더로 접근 가능한가",
+      "5초 이상 자동 재생되는 모든 움직이는 콘텐츠에 적용되는가"
+    ],
+    "tools": ["직접 조작 테스트", "스크린리더"],
+    "wcagRef": "WCAG 2.2.2 Pause, Stop, Hide"
+  },
+  {
+    "ksCode": "6.3-01",
+    "name": "깜박임과 번쩍임 사용 제한",
+    "guide": "초당 3~50회 깜박이는 콘텐츠가 없는지 확인하세요. 광과민성 발작을 유발할 수 있습니다.",
+    "checkPoints": [
+      "GIF·CSS·JavaScript로 만든 빠른 깜박임 효과가 있는가",
+      "깜박이는 영역이 화면의 1/4(약 341×256px) 이상을 차지하는가",
+      "광고·배너 영역에 반짝이는 효과가 있는가"
+    ],
+    "tools": ["PEAT(Photosensitive Epilepsy Analysis Tool)", "육안 확인"],
+    "wcagRef": "WCAG 2.3.1 Three Flashes or Below Threshold"
+  },
+  {
+    "ksCode": "6.5-01",
+    "name": "고정된 참조 위치 정보",
+    "guide": "무한 스크롤 또는 동적 로드 페이지에서 사용자가 현재 위치를 파악하고 돌아올 수 있는지 확인하세요.",
+    "checkPoints": [
+      "무한 스크롤 구현 시 URL·히스토리가 갱신되는가",
+      "페이지 번호 또는 위치 정보가 스크린리더에 전달되는가",
+      "뒤로가기 후 이전 스크롤 위치로 복귀하는가"
+    ],
+    "tools": ["브라우저 히스토리 확인", "스크린리더"],
+    "wcagRef": "KS X 3253:2016 6.5"
+  },
+  {
+    "ksCode": "7.4-01",
+    "name": "콘텐츠의 선형화",
+    "guide": "CSS를 제거해도 콘텐츠의 의미 있는 순서가 유지되는지, 표(table)를 레이아웃 목적으로 오용하지 않는지 확인하세요.",
+    "checkPoints": [
+      "CSS position·float으로 시각 순서와 DOM 순서가 반전되지 않는가",
+      "레이아웃 table 사용 시 role=\"presentation\"이 지정됐는가",
+      "2단 레이아웃을 CSS 제거 후 확인했을 때 왼쪽→오른쪽→아래 순으로 읽히는가"
+    ],
+    "tools": ["Chrome DevTools – CSS 비활성화"],
+    "wcagRef": "WCAG 1.3.2 Meaningful Sequence"
+  },
+  {
+    "ksCode": "7.6-01",
+    "name": "입력 오류 정정",
+    "guide": "폼 제출 오류 발생 시 오류 위치와 수정 방법을 사용자에게 알려주는지 확인하세요.",
+    "checkPoints": [
+      "오류 발생 시 오류 메시지가 명확하게 표시되는가",
+      "오류 메시지가 해당 입력 필드와 가깝게 배치되는가",
+      "스크린리더로 오류 메시지를 인지할 수 있는가 (aria-describedby, role=\"alert\" 등)",
+      "오류 수정 방법을 텍스트로 안내하는가"
+    ],
+    "tools": ["스크린리더 테스트", "Axe DevTools"],
+    "wcagRef": "WCAG 3.3.1 Error Identification"
+  },
+  {
+    "ksCode": "8.2-01",
+    "name": "운영체제 접근성 기능 호환",
+    "guide": "OS의 큰 텍스트·고대비·축소 동작 등 접근성 기능이 활성화됐을 때 화면 레이아웃이 무너지지 않는지 확인하세요.",
+    "checkPoints": [
+      "시스템 폰트 크기를 200%로 키웠을 때 콘텐츠가 잘리지 않는가",
+      "고대비 모드에서 텍스트·아이콘이 보이는가",
+      "iOS VoiceOver / Android TalkBack과 상호작용이 정상 작동하는가",
+      "pinch-zoom(확대)을 비활성화하지 않는가 (meta viewport user-scalable=no 금지)"
+    ],
+    "tools": ["iOS VoiceOver", "Android TalkBack", "Windows 고대비 모드"],
+    "wcagRef": "WCAG 1.4.4 Resize Text, 1.4.10 Reflow"
+  }
+]

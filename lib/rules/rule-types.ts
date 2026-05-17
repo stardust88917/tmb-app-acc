@@ -1,38 +1,20 @@
 import type { CheerioAPI } from "cheerio";
 
-export type Verdict = "적합" | "부적합" | "검토필요" | "해당없음";
-export type Priority = "high" | "medium" | "low";
-export type Principle =
-  | "인식의 용이성"
-  | "운용의 용이성"
-  | "이해의 용이성"
-  | "견고성"
-  | "모범 사례";
-
-export interface Issue {
-  selector: string;
-  html: string;
-  message: string;
-  suggestion: string;
+/** 하나의 위반 인스턴스 */
+export interface Violation {
+  selector: string;   // CSS 선택자 (가능하면 구체적으로)
+  snippet: string;    // 원본 HTML 발췌 (최대 250자)
+  lineHint?: number;  // 줄 번호 (가능할 때)
+  message: string;    // 사람이 읽을 수 있는 위반 설명
 }
 
-export interface CheckResult {
-  verdict: Verdict;
-  issues: Issue[];
-  passCount: number;
-  checkedCount: number;
-  notes?: string;
-}
-
+/** 각 룰 파일이 export하는 구조 */
 export interface Rule {
   id: string;
   ksCode: string;
-  ksName: string;
-  principle: Principle;
-  guideline: string;
-  category: string;
-  priority: Priority;
-  isBestPractice: boolean;
-  description: string;
-  check: ($: CheerioAPI, htmlText?: string) => CheckResult;
+  /** 자동 검사 신뢰도: high → 즉시 부적합, medium → 부적합, low → 검토 필요 */
+  confidence: "high" | "medium" | "low";
+  requiresCss?: boolean;
+  bestPractice?: boolean;
+  check($: CheerioAPI, htmlText: string, css?: string): Violation[];
 }
