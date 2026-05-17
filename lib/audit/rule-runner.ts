@@ -1,6 +1,6 @@
 import { load } from "cheerio";
 import { allRules } from "@/lib/rules";
-import ksRulesData from "@/data/ks-rules.json";
+import ksRulesRaw from "@/data/ks-rules.json";
 import manualGuidesData from "@/data/manual-check-guides.json";
 import type {
   AuditResponse,
@@ -13,15 +13,32 @@ import type {
 
 type KsRuleRow = {
   code: string;
-  principle: string;
+  clause: string;
   category: string;
   name: string;
+  criteriaPass?: string;
+  criteriaFail?: string;
+  iosHint?: string;
+  androidHint?: string;
   severity: string;
-  autoCheckable: boolean;
+  note?: string;
 };
 
-const KS_RULES = ksRulesData as KsRuleRow[];
+const KS_RULES = (ksRulesRaw as { rules: KsRuleRow[] }).rules;
 const MANUAL_GUIDES = manualGuidesData as ManualCheckGuide[];
+
+// ── clause 번호 → 원칙명 ──────────────────────────────────────────────────────
+function getPrinciple(clause: string): string {
+  const n = parseInt(clause, 10);
+  if (n === 5) return "인식의 용이성";
+  if (n === 6) return "운용의 용이성";
+  if (n === 7) return "이해의 용이성";
+  if (n === 8) return "견고성";
+  return clause;
+}
+
+// ── 자동 검사 가능 KS 코드 집합 (registry 기반) ──────────────────────────────
+const AUTO_KS_CODES = new Set(allRules.map((r) => r.ksCode));
 
 // ── 모든 룰 실행 ────────────────────────────────────────────────────────────
 export function runAllRules(
@@ -62,18 +79,30 @@ export function mapToKsItems(
   }
 
   return KS_RULES.map((ks) => {
+    const principle = getPrinciple(ks.clause);
+    const autoCheckable = AUTO_KS_CODES.has(ks.code);
     const manualGuide = MANUAL_GUIDES.find((g) => g.ksCode === ks.code);
     const relatedRules = byCode.get(ks.code) ?? [];
 
+    // ── 공통 필드 ───────────────────────────────────────────────────────
+    const base = {
+      code: ks.code,
+      name: ks.name,
+      principle,
+      category: ks.category,
+      severity: ks.severity,
+      autoCheckable,
+      criteriaPass: ks.criteriaPass,
+      criteriaFail: ks.criteriaFail,
+      iosHint: ks.iosHint,
+      androidHint: ks.androidHint,
+      note: ks.note,
+    };
+
     // ── 수동 검사 전용 항목 ─────────────────────────────────────────────
-    if (!ks.autoCheckable) {
+    if (!autoCheckable) {
       return {
-        code: ks.code,
-        name: ks.name,
-        principle: ks.principle,
-        category: ks.category,
-        severity: ks.severity,
-        autoCheckable: false,
+        ...base,
         verdict: "manual" as KsVerdict,
         violations: [],
         ruleIds: [],
@@ -116,12 +145,7 @@ export function mapToKsItems(
     }
 
     return {
-      code: ks.code,
-      name: ks.name,
-      principle: ks.principle,
-      category: ks.category,
-      severity: ks.severity,
-      autoCheckable: true,
+      ...base,
       verdict,
       violations: allViolations,
       ruleIds: relatedRules.map((r) => r.ruleId),

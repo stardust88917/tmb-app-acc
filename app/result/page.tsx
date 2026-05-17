@@ -77,6 +77,28 @@ function KsItemCard({
       {/* Detail */}
       {open && (
         <div className="border-t border-gray-200 px-4 pb-4 pt-3 space-y-3">
+          {/* KS 기준 (적합/부적합) */}
+          {(item.criteriaPass || item.criteriaFail) && (
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-200">
+              <p className="text-xs font-semibold text-gray-700">📖 KS X 3253 검수 기준</p>
+              {item.criteriaPass && (
+                <div>
+                  <p className="text-xs font-medium text-green-700 mb-0.5">✅ 적합 기준</p>
+                  <p className="text-xs text-gray-600 whitespace-pre-line">{item.criteriaPass}</p>
+                </div>
+              )}
+              {item.criteriaFail && item.criteriaFail !== "-" && (
+                <div>
+                  <p className="text-xs font-medium text-red-700 mb-0.5">❌ 부적합 사례</p>
+                  <p className="text-xs text-gray-600 whitespace-pre-line">{item.criteriaFail}</p>
+                </div>
+              )}
+              {item.note && (
+                <p className="text-xs text-gray-400 italic">📌 {item.note}</p>
+              )}
+            </div>
+          )}
+
           {/* 수동 검사 가이드 */}
           {item.manualGuide && (
             <div className="bg-blue-50 rounded-lg p-3 space-y-2">
@@ -315,7 +337,7 @@ export default function ResultPage() {
         )}
 
         <p className="text-center text-xs text-gray-400 pb-4">
-          KS X 3253:2016 · 34개 항목 · 23개 자동 룰 · fetch + cheerio
+          KS X 3253:2016 · 34개 항목 (자동 12 · 수동 22) · 23개 룰 · fetch + cheerio
         </p>
       </div>
     </div>

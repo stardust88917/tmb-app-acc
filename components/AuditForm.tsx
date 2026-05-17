@@ -10,7 +10,7 @@ const STEPS = [
   { pct: 25, label: "HTML 수신 중..." },
   { pct: 50, label: "CSS 분석 중..." },
   { pct: 75, label: "23개 룰 실행 중..." },
-  { pct: 90, label: "KS 34개 항목 매핑 중..." },
+  { pct: 90, label: "KS 34개 항목 (자동 12·수동 22) 매핑 중..." },
 ];
 
 export default function AuditForm() {
@@ -168,7 +168,7 @@ export default function AuditForm() {
       )}
 
       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 space-y-1">
-        <p className="font-semibold">📋 KS X 3253:2016 · 34개 항목 · 23개 자동 룰</p>
+        <p className="font-semibold">📋 KS X 3253:2016 · 34개 항목 (자동 12 · 수동 22) · 23개 룰</p>
         <p>URL 모드: HTML + 연결 CSS 자동 수집 → 색상 대비·포커스 포함 전체 검사</p>
         <p>파일 모드: 로컬 HTML 정적 분석 → CSS 룰 제외 (axe DevTools로 보완 권장)</p>
       </div>

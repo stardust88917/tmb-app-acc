@@ -29,10 +29,17 @@ export interface ManualCheckGuide {
 export interface KsItemResult {
   code: string;                  // e.g. "5.1-01"
   name: string;                  // e.g. "이미지 대체 텍스트 제공"
-  principle: string;
+  principle: string;             // 인식의 용이성 / 운용의 용이성 / 이해의 용이성 / 견고성
   category: string;
   severity: string;
   autoCheckable: boolean;
+
+  // KS 기준 (엑셀 원본)
+  criteriaPass?: string;         // 적합 기준 설명
+  criteriaFail?: string;         // 부적합 사례
+  iosHint?: string;              // iOS 구현 힌트
+  androidHint?: string;          // Android 구현 힌트
+  note?: string;                 // 비고
 
   // 자동 검사 항목
   verdict: KsVerdict;
