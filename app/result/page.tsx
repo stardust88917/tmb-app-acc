@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AuditResponse, KsItemResult } from "@/lib/types";
+import type { AuditResponse, KsItemResult, MultiAuditResponse } from "@/lib/types";
 import { calculateScore } from "@/lib/audit/scoring";
+import MultiResultView from "@/components/MultiResultView";
 
 // ── 뱃지 헬퍼 ──────────────────────────────────────────────────────────────
 const VERDICT_CHIP: Record<string, { label: string; cls: string }> = {
@@ -180,6 +181,7 @@ function KsItemCard({
 export default function ResultPage() {
   const router = useRouter();
   const [data, setData] = useState<AuditResponse | null>(null);
+  const [multiData, setMultiData] = useState<MultiAuditResponse | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [dlError, setDlError] = useState("");
   const [filterPrinciple, setFilterPrinciple] = useState("all");
@@ -188,7 +190,14 @@ export default function ResultPage() {
   useEffect(() => {
     const raw = sessionStorage.getItem("lastAuditResult");
     if (!raw) { router.push("/"); return; }
-    try { setData(JSON.parse(raw) as AuditResponse); }
+    try {
+      const parsed = JSON.parse(raw);
+      if ("type" in parsed && parsed.type === "multi") {
+        setMultiData(parsed as MultiAuditResponse);
+      } else {
+        setData(parsed as AuditResponse);
+      }
+    }
     catch { router.push("/"); }
   }, [router]);
 
@@ -207,14 +216,15 @@ export default function ResultPage() {
   }
 
   async function handleDownload() {
-    if (!data) return;
+    const payload = multiData ?? data;
+    if (!payload) return;
     setDownloading(true);
     setDlError("");
     try {
       const res = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? "실패"); }
       const blob = await res.blob();
@@ -233,13 +243,41 @@ export default function ResultPage() {
     }
   }
 
-  if (!data) {
+  if (!data && !multiData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-sm text-gray-400">불러오는 중...</p>
       </div>
     );
   }
+
+  // ── Multi-page result ────────────────────────────────────────────────────
+  if (multiData) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <button onClick={() => router.push("/")}
+              className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+              ← 새 검수
+            </button>
+          </div>
+          <MultiResultView
+            data={multiData}
+            onDownload={handleDownload}
+            downloading={downloading}
+            dlError={dlError}
+          />
+          <p className="text-center text-xs text-gray-400 pb-4">
+            KS X 3253:2016 · 34개 항목 (자동 12 · 수동 22) · 26개 룰 · fetch + cheerio
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // At this point multiData is null, so data must be non-null (guarded by early return above)
+  if (!data) return null;
 
   const principles = ["all", ...Array.from(new Set(data.ksItems.map((i) => i.principle)))];
   const verdicts = ["all", "fail", "review", "manual", "pass", "na"];

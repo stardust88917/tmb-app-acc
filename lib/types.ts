@@ -59,7 +59,7 @@ export interface KsItemResult {
   userNote?: string;
 }
 
-// ── API 응답 전체 ──────────────────────────────────────────────────────────
+// ── 단일 페이지 API 응답 ───────────────────────────────────────────────────
 export interface AuditResponse {
   source: string;             // URL 또는 파일명
   auditDate: string;
@@ -75,4 +75,40 @@ export interface AuditResponse {
   reviewCount: number;
   manualCount: number;
   overallScore: number;       // 자동 판정 항목 기준 0-100
+}
+
+// ── 멀티 URL 일관성 이슈 ───────────────────────────────────────────────────
+export interface ConsistencyIssue {
+  ksCode: string;
+  ksName: string;
+  type: "mixed-verdict" | "structure" | "navigation";
+  description: string;
+  affectedPages: string[];     // source URLs
+  passingPages: string[];
+  severity: "high" | "medium" | "low";
+}
+
+// ── 사이트 종합 집계 ────────────────────────────────────────────────────────
+export interface SiteOverview {
+  pageCount: number;
+  passCount: number;           // ALL 페이지 적합 항목
+  failCount: number;           // ANY 페이지 부적합 항목
+  reviewCount: number;
+  manualCount: number;
+  overallScore: number;        // strictest: 가장 낮은 페이지 점수
+  pageScores: { source: string; score: number | null }[];
+  worstItems: {
+    code: string; name: string;
+    failPageCount: number; failPages: string[];
+  }[];
+}
+
+// ── 멀티 페이지 API 응답 ───────────────────────────────────────────────────
+export interface MultiAuditResponse {
+  type: "multi";
+  auditDate: string;
+  pages: AuditResponse[];
+  failed: { url: string; error: string }[];
+  overview: SiteOverview;
+  consistency: ConsistencyIssue[];
 }
