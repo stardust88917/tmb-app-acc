@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AuditResponse, KsItemResult } from "@/lib/types";
+import { calculateScore } from "@/lib/audit/scoring";
 
 // ── 뱃지 헬퍼 ──────────────────────────────────────────────────────────────
 const VERDICT_CHIP: Record<string, { label: string; cls: string }> = {
@@ -19,6 +20,7 @@ const USER_OPTIONS = [
   { value: "pass",   label: "✅ 적합" },
   { value: "fail",   label: "❌ 부적합" },
   { value: "review", label: "⚠️ 검토필요" },
+  { value: "na",     label: "⬜ 해당없음" },
 ] as const;
 
 // ── 개별 항목 카드 ──────────────────────────────────────────────────────────
@@ -28,7 +30,7 @@ function KsItemCard({
   onUserNote,
 }: {
   item: KsItemResult;
-  onUserVerdict: (code: string, v: "pass" | "fail" | "review" | undefined) => void;
+  onUserVerdict: (code: string, v: "pass" | "fail" | "review" | "na" | undefined) => void;
   onUserNote: (code: string, n: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -99,18 +101,24 @@ function KsItemCard({
             </div>
           )}
 
-          {/* 수동 검사 가이드 */}
+          {/* 수동/반자동 검사 가이드 */}
           {item.manualGuide && (
             <div className="bg-blue-50 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-blue-800">📋 수동 검사 가이드</p>
-              <p className="text-xs text-blue-700">{item.manualGuide.guide}</p>
-              <ul className="text-xs text-blue-700 list-disc pl-4 space-y-0.5">
-                {item.manualGuide.checkPoints.map((cp, i) => <li key={i}>{cp}</li>)}
-              </ul>
+              <p className="text-xs font-semibold text-blue-800">
+                {item.manualGuide.classification === "semi-auto"
+                  ? "🔀 반자동 검사 가이드"
+                  : "📋 수동 검사 가이드"}
+              </p>
+              <p className="text-xs text-blue-700 whitespace-pre-line">{item.manualGuide.method}</p>
               <p className="text-xs text-blue-600">
                 🔧 도구: {item.manualGuide.tools.join(", ")}
               </p>
-              <p className="text-xs text-gray-500">📌 {item.manualGuide.wcagRef}</p>
+              {item.manualGuide.platformHints.ios && (
+                <p className="text-xs text-gray-500">🍎 iOS: {item.manualGuide.platformHints.ios}</p>
+              )}
+              {item.manualGuide.platformHints.android && (
+                <p className="text-xs text-gray-500">🤖 Android: {item.manualGuide.platformHints.android}</p>
+              )}
             </div>
           )}
 
@@ -269,29 +277,49 @@ export default function ResultPage() {
         </div>
 
         {/* Summary */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h1 className="text-base font-bold text-gray-900 mb-1">KS X 3253:2016 접근성 검수 결과</h1>
-          <p className="text-sm text-gray-500 truncate mb-1">{data.source}</p>
-          <p className="text-xs text-gray-400 mb-4">
-            {new Date(data.auditDate).toLocaleString("ko-KR")} ·{" "}
-            {data.inputMode === "url" ? "URL 모드" : "파일 모드"} ·{" "}
-            CSS {data.cssAnalyzed ? "포함" : "미포함"}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {[
-              { label: "접근성 점수",  value: `${data.overallScore}점`, color: data.overallScore >= 80 ? "text-green-600" : data.overallScore >= 60 ? "text-yellow-600" : "text-red-600" },
-              { label: "✅ 적합",      value: data.passCount,   color: "text-green-600" },
-              { label: "❌ 부적합",    value: data.failCount,   color: "text-red-600" },
-              { label: "⚠️ 검토필요", value: data.reviewCount, color: "text-yellow-600" },
-              { label: "🔵 수동검사", value: data.manualCount, color: "text-blue-600" },
-            ].map((s) => (
-              <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
-                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+        {(() => {
+          const score = calculateScore(data.ksItems);
+          const rateVal = score.rate;
+          const rateColor = rateVal === null ? "text-gray-400"
+            : rateVal >= 80 ? "text-green-600"
+            : rateVal >= 60 ? "text-yellow-600"
+            : "text-red-600";
+          return (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h1 className="text-base font-bold text-gray-900 mb-1">KS X 3253:2016 접근성 검수 결과</h1>
+              <p className="text-sm text-gray-500 truncate mb-1">{data.source}</p>
+              <p className="text-xs text-gray-400 mb-4">
+                {new Date(data.auditDate).toLocaleString("ko-KR")} ·{" "}
+                {data.inputMode === "url" ? "URL 모드" : "파일 모드"} ·{" "}
+                CSS {data.cssAnalyzed ? "포함" : "미포함"}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {/* 적합률 카드 */}
+                <div className="bg-gray-50 rounded-xl p-3 text-center sm:col-span-1">
+                  <p className={`text-2xl font-bold ${rateColor}`}>
+                    {rateVal !== null ? `${rateVal}%` : "—"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">종합 적합률</p>
+                  <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                    ⓘ {score.formula}
+                    <br />검토·해당없음·미검사 제외
+                  </p>
+                </div>
+                {[
+                  { label: "✅ 적합",      value: score.passed,        color: "text-green-600" },
+                  { label: "❌ 부적합",    value: score.failed,        color: "text-red-600" },
+                  { label: "⚠️ 검토필요", value: score.review,        color: "text-yellow-600" },
+                  { label: "🔵 수동검사", value: score.manualPending,  color: "text-blue-600" },
+                ].map((s) => (
+                  <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
+                    <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
 
         {/* Filters */}
         <div className="flex gap-2 flex-wrap">
@@ -324,7 +352,7 @@ export default function ResultPage() {
                 <KsItemCard
                   key={item.code}
                   item={item}
-                  onUserVerdict={(code, v) => updateItem(code, { userVerdict: v })}
+                  onUserVerdict={(code, v) => updateItem(code, { userVerdict: v as "pass" | "fail" | "review" | "na" | undefined })}
                   onUserNote={(code, n) => updateItem(code, { userNote: n })}
                 />
               ))}

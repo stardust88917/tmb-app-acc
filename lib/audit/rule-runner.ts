@@ -40,6 +40,29 @@ function getPrinciple(clause: string): string {
 // ── 자동 검사 가능 KS 코드 집합 (registry 기반) ──────────────────────────────
 const AUTO_KS_CODES = new Set(allRules.map((r) => r.ksCode));
 
+// ── 미디어 존재 여부로 N/A 항목 감지 ─────────────────────────────────────────
+function detectNaItems(htmlText: string): Set<string> {
+  const $ = load(htmlText);
+  const na = new Set<string>();
+
+  const hasVideo =
+    $("video").length > 0 ||
+    $('source[type^="video/"]').length > 0;
+
+  const hasAudio =
+    $("audio").length > 0 ||
+    $('source[type^="audio/"]').length > 0;
+
+  const hasMediaIframe =
+    $('iframe[src*="youtube.com"], iframe[src*="youtu.be"], iframe[src*="vimeo.com"]')
+      .length > 0;
+
+  if (!hasVideo && !hasMediaIframe) na.add("5.2-01");
+  if (!hasAudio)                     na.add("5.2-02");
+
+  return na;
+}
+
 // ── 모든 룰 실행 ────────────────────────────────────────────────────────────
 export function runAllRules(
   htmlText: string,
@@ -68,7 +91,8 @@ export function runAllRules(
 // ── 룰 결과 → 34개 KS 항목으로 매핑 ─────────────────────────────────────────
 export function mapToKsItems(
   ruleResults: RuleResult[],
-  cssAvailable: boolean
+  cssAvailable: boolean,
+  naOverrides: Set<string> = new Set()
 ): KsItemResult[] {
   // ksCode → 해당 룰 결과들
   const byCode = new Map<string, RuleResult[]>();
@@ -98,6 +122,18 @@ export function mapToKsItems(
       androidHint: ks.androidHint,
       note: ks.note,
     };
+
+    // ── N/A 오버라이드 (미디어 없는 페이지의 5.2-01/02 등) ────────────────
+    if (naOverrides.has(ks.code)) {
+      return {
+        ...base,
+        autoCheckable: false,
+        verdict: "na" as KsVerdict,
+        violations: [],
+        ruleIds: [],
+        manualGuide,
+      };
+    }
 
     // ── 수동 검사 전용 항목 ─────────────────────────────────────────────
     if (!autoCheckable) {
@@ -173,8 +209,9 @@ export async function runAuditFromHtml(
   htmlText: string,
   fileName: string
 ): Promise<AuditResponse> {
+  const naOverrides = detectNaItems(htmlText);
   const ruleResults = runAllRules(htmlText, undefined);
-  const ksItems = mapToKsItems(ruleResults, false);
+  const ksItems = mapToKsItems(ruleResults, false, naOverrides);
   const summary = computeSummary(ksItems);
   return {
     source: fileName,
@@ -219,8 +256,9 @@ export async function runAuditFromUrl(url: string): Promise<AuditResponse> {
     .map((r) => r.value)
     .join("\n");
 
+  const naOverrides = detectNaItems(htmlText);
   const ruleResults = runAllRules(htmlText, css || undefined);
-  const ksItems = mapToKsItems(ruleResults, css.length > 0);
+  const ksItems = mapToKsItems(ruleResults, css.length > 0, naOverrides);
   const summary = computeSummary(ksItems);
 
   return {

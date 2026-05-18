@@ -19,11 +19,14 @@ export type KsVerdict = "pass" | "fail" | "review" | "manual" | "na";
 
 export interface ManualCheckGuide {
   ksCode: string;
-  name: string;
-  guide: string;
-  checkPoints: string[];
+  category: string;
+  title: string;
+  classification: "manual" | "semi-auto";
+  criteriaPass?: string;
+  criteriaFail?: string;
+  method: string;
   tools: string[];
-  wcagRef: string;
+  platformHints: { ios?: string | null; android?: string | null };
 }
 
 export interface KsItemResult {
@@ -52,7 +55,7 @@ export interface KsItemResult {
   manualGuide?: ManualCheckGuide;
 
   // 사용자 입력 (클라이언트측 수동 판정)
-  userVerdict?: "pass" | "fail" | "review";
+  userVerdict?: "pass" | "fail" | "review" | "na";
   userNote?: string;
 }
 

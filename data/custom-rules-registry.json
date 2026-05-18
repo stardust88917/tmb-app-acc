@@ -4,6 +4,8 @@
   { "id": "ks-empty-aria-label",      "ksCode": "5.1-01", "confidence": "high",   "requiresCss": false, "description": "aria-label 값이 빈 문자열" },
   { "id": "ks-empty-button-label",    "ksCode": "5.1-02", "confidence": "high",   "requiresCss": false, "description": "버튼에 접근 가능한 이름 없음 (아이콘 버튼 포함)" },
   { "id": "ks-li-no-context",         "ksCode": "5.1-01", "confidence": "medium", "requiresCss": false, "description": "li 항목에 텍스트·대체텍스트 없음" },
+  { "id": "ks-decorative-img",        "ksCode": "5.1-03", "confidence": "medium", "requiresCss": false, "description": "장식 이미지 role/alt 모순 처리" },
+  { "id": "ks-background-image-info", "ksCode": "5.1-04", "confidence": "low",    "requiresCss": true,  "description": "CSS background-image 대체 수단 수동 확인 필요" },
   { "id": "ks-color-contrast",        "ksCode": "5.4-01", "confidence": "low",    "requiresCss": true,  "description": "CSS 명도 대비 4.5:1 미만 의심" },
   { "id": "ks-autoplay",              "ksCode": "7.4-01", "confidence": "high",   "requiresCss": false, "description": "video/audio autoplay 속성 사용 (자동 배경음 재생)" },
   { "id": "ks-counter-aria-live",     "ksCode": "5.6-01", "confidence": "low",    "requiresCss": false, "description": "숫자 카운터에 aria-live 없음" },
@@ -21,5 +23,6 @@
   { "id": "ks-auto-popup",            "ksCode": "7.5-01", "confidence": "medium", "requiresCss": false, "description": "로드 시 자동 팝업·모달 스크립트" },
   { "id": "ks-dl-order",              "ksCode": "8.2-01", "confidence": "medium", "requiresCss": false, "description": "dl 첫 자식이 dt가 아님" },
   { "id": "ks-img-malformed",         "ksCode": "8.2-01", "confidence": "low",    "requiresCss": false, "description": "img self-close 형식 오류" },
-  { "id": "ks-aria-usage",            "ksCode": "8.2-02", "confidence": "medium", "requiresCss": false, "description": "잘못된 ARIA role·속성 사용" }
+  { "id": "ks-aria-usage",            "ksCode": "8.2-02", "confidence": "medium", "requiresCss": false, "description": "잘못된 ARIA role·속성 사용" },
+  { "id": "ks-touch-target-size",     "ksCode": "6.5-01", "confidence": "low",    "requiresCss": true,  "description": "CSS에서 34px 미만 터치 영역 감지" }
 ]
