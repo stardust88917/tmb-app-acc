@@ -24,33 +24,59 @@ const USER_OPTIONS = [
   { value: "na",     label: "⬜ 해당없음" },
 ] as const;
 
+type QuickFilter = "all" | "auto-only" | "inspector" | "pending" | "fail-only";
+const QUICK_FILTERS: { key: QuickFilter; label: (items: KsItemResult[]) => string }[] = [
+  { key: "all",        label: (items) => `전체 (${items.length})` },
+  { key: "fail-only",  label: (items) => `부적합 (${items.filter(i => (i.userVerdict ?? i.verdict) === "fail").length})` },
+  { key: "pending",    label: (items) => `미입력 (${items.filter(i => i.verdict === "manual" && !i.userVerdict).length})` },
+  { key: "inspector",  label: (items) => `검사자 판정 (${items.filter(i => !!i.userVerdict).length})` },
+  { key: "auto-only",  label: (items) => `자동만 (${items.filter(i => !i.userVerdict).length})` },
+];
+
+function applyQuickFilter(items: KsItemResult[], f: QuickFilter): KsItemResult[] {
+  switch (f) {
+    case "all":       return items;
+    case "fail-only": return items.filter(i => (i.userVerdict ?? i.verdict) === "fail");
+    case "pending":   return items.filter(i => i.verdict === "manual" && !i.userVerdict);
+    case "inspector": return items.filter(i => !!i.userVerdict);
+    case "auto-only": return items.filter(i => !i.userVerdict);
+  }
+}
+
 // ── 개별 항목 카드 ──────────────────────────────────────────────────────────
 function KsItemCard({
   item,
   onUserVerdict,
-  onUserNote,
+  onUserMemo,
 }: {
   item: KsItemResult;
   onUserVerdict: (code: string, v: "pass" | "fail" | "review" | "na" | undefined) => void;
-  onUserNote: (code: string, n: string) => void;
+  onUserMemo: (code: string, n: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const chip = VERDICT_CHIP[item.verdict] ?? VERDICT_CHIP.na;
+  const hasUserVerdict = !!item.userVerdict;
+  const hasMemo = !!(item.userMemo?.trim());
+
+  const borderCls = item.verdict === "fail"   ? "border-red-200 bg-red-50"
+    : item.verdict === "review" ? "border-yellow-200 bg-yellow-50"
+    : item.verdict === "manual" ? "border-blue-200 bg-blue-50"
+    : "border-gray-100 bg-white";
 
   return (
-    <div className={`border rounded-xl overflow-hidden ${
-      item.verdict === "fail" ? "border-red-200 bg-red-50"
-      : item.verdict === "review" ? "border-yellow-200 bg-yellow-50"
-      : item.verdict === "manual" ? "border-blue-200 bg-blue-50"
-      : "border-gray-100 bg-white"
-    }`}>
+    <div className={`relative border rounded-xl overflow-hidden ${borderCls}`}>
+      {/* 검사자 판정 표시 — 보라색 좌측 strip */}
+      {hasUserVerdict && (
+        <div className="absolute left-0 inset-y-0 w-1 bg-purple-400" />
+      )}
+
       {/* Header */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+        className="w-full flex items-center gap-2 pl-5 pr-4 py-3 text-left"
       >
         <span className="text-xs font-mono text-gray-400 w-14 shrink-0">{item.code}</span>
-        <span className="text-sm font-medium text-gray-800 flex-1">{item.name}</span>
+        <span className="text-sm font-medium text-gray-800 flex-1 min-w-0 truncate">{item.name}</span>
 
         {item.violations.length > 0 && (
           <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full shrink-0">
@@ -66,7 +92,7 @@ function KsItemCard({
           </span>
         )}
 
-        {/* 사용자 판정이 있으면 우선 표시 */}
+        {/* 자동 또는 검사자 판정 뱃지 */}
         {item.userVerdict ? (
           <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${VERDICT_CHIP[item.userVerdict]?.cls}`}>
             {VERDICT_CHIP[item.userVerdict]?.label} (수동)
@@ -74,13 +100,25 @@ function KsItemCard({
         ) : (
           <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${chip.cls}`}>{chip.label}</span>
         )}
+
+        {/* 검사자 입력 아이콘 */}
+        {hasUserVerdict && <span className="text-xs shrink-0" title="검사자 판정 완료">✍️</span>}
+        {hasMemo && (
+          <span className="relative group shrink-0">
+            <span className="text-xs cursor-default" title={item.userMemo}>📝</span>
+            <span className="absolute right-0 bottom-full mb-1 w-52 bg-gray-800 text-white text-xs rounded-lg p-2 hidden group-hover:block z-20 whitespace-pre-wrap leading-relaxed">
+              {(item.userMemo ?? "").slice(0, 120)}{(item.userMemo?.length ?? 0) > 120 ? "…" : ""}
+            </span>
+          </span>
+        )}
+
         <span className="text-gray-400 text-xs shrink-0">{open ? "▲" : "▼"}</span>
       </button>
 
       {/* Detail */}
       {open && (
         <div className="border-t border-gray-200 px-4 pb-4 pt-3 space-y-3">
-          {/* KS 기준 (적합/부적합) */}
+          {/* KS 기준 */}
           {(item.criteriaPass || item.criteriaFail) && (
             <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-200">
               <p className="text-xs font-semibold text-gray-700">📖 KS X 3253 검수 기준</p>
@@ -96,9 +134,7 @@ function KsItemCard({
                   <p className="text-xs text-gray-600 whitespace-pre-line">{item.criteriaFail}</p>
                 </div>
               )}
-              {item.note && (
-                <p className="text-xs text-gray-400 italic">📌 {item.note}</p>
-              )}
+              {item.note && <p className="text-xs text-gray-400 italic">📌 {item.note}</p>}
             </div>
           )}
 
@@ -106,14 +142,10 @@ function KsItemCard({
           {item.manualGuide && (
             <div className="bg-blue-50 rounded-lg p-3 space-y-2">
               <p className="text-xs font-semibold text-blue-800">
-                {item.manualGuide.classification === "semi-auto"
-                  ? "🔀 반자동 검사 가이드"
-                  : "📋 수동 검사 가이드"}
+                {item.manualGuide.classification === "semi-auto" ? "🔀 반자동 검사 가이드" : "📋 수동 검사 가이드"}
               </p>
               <p className="text-xs text-blue-700 whitespace-pre-line">{item.manualGuide.method}</p>
-              <p className="text-xs text-blue-600">
-                🔧 도구: {item.manualGuide.tools.join(", ")}
-              </p>
+              <p className="text-xs text-blue-600">🔧 도구: {item.manualGuide.tools.join(", ")}</p>
               {item.manualGuide.platformHints.ios && (
                 <p className="text-xs text-gray-500">🍎 iOS: {item.manualGuide.platformHints.ios}</p>
               )}
@@ -129,9 +161,7 @@ function KsItemCard({
           )}
           {item.violations.slice(0, 5).map((v, i) => (
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 space-y-1">
-              <code className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded break-all">
-                {v.selector}
-              </code>
+              <code className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded break-all">{v.selector}</code>
               <p className="text-xs text-gray-700">{v.message}</p>
               {v.snippet && (
                 <pre className="text-xs text-gray-500 bg-gray-50 rounded p-2 overflow-x-auto whitespace-pre-wrap break-all">
@@ -144,32 +174,34 @@ function KsItemCard({
             <p className="text-xs text-gray-400">… 외 {item.violations.length - 5}건 (엑셀에서 전체 확인)</p>
           )}
 
-          {/* 수동 판정 입력 */}
+          {/* 검사자 판정 입력 */}
           <div className="border-t border-gray-200 pt-3 space-y-2">
             <p className="text-xs font-semibold text-gray-600">✏️ 검사자 판정</p>
             <div className="flex gap-2 flex-wrap">
               {USER_OPTIONS.map((opt) => (
                 <button key={opt.value} type="button"
-                  onClick={() => onUserVerdict(
-                    item.code,
-                    item.userVerdict === opt.value ? undefined : opt.value
-                  )}
+                  onClick={() => onUserVerdict(item.code, item.userVerdict === opt.value ? undefined : opt.value)}
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     item.userVerdict === opt.value
-                      ? "border-gray-800 bg-gray-800 text-white"
-                      : "border-gray-300 text-gray-600 hover:border-gray-500"
+                      ? "border-purple-700 bg-purple-700 text-white"
+                      : "border-gray-300 text-gray-600 hover:border-purple-400"
                   }`}>
                   {opt.label}
                 </button>
               ))}
             </div>
             <textarea
-              value={item.userNote ?? ""}
-              onChange={(e) => onUserNote(item.code, e.target.value)}
-              placeholder="검사 메모 (선택)"
+              value={item.userMemo ?? ""}
+              onChange={(e) => onUserMemo(item.code, e.target.value)}
+              placeholder="검사 메모 (선택) — 입력 시 📝 아이콘으로 표시됩니다"
               rows={2}
-              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-400 resize-none"
             />
+            {item.userInputAt && (
+              <p className="text-[10px] text-gray-400">
+                판정 입력: {new Date(item.userInputAt).toLocaleString("ko-KR")}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -185,7 +217,7 @@ export default function ResultPage() {
   const [downloading, setDownloading] = useState(false);
   const [dlError, setDlError] = useState("");
   const [filterPrinciple, setFilterPrinciple] = useState("all");
-  const [filterVerdict, setFilterVerdict] = useState("all");
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
 
   useEffect(() => {
     const raw = sessionStorage.getItem("lastAuditResult");
@@ -276,21 +308,34 @@ export default function ResultPage() {
     );
   }
 
-  // At this point multiData is null, so data must be non-null (guarded by early return above)
   if (!data) return null;
 
+  // ── Single-page result ───────────────────────────────────────────────────
+  const score = calculateScore(data.ksItems);
+  const rateVal = score.rate;
+  const rateColor = rateVal === null ? "text-gray-400"
+    : rateVal >= 80 ? "text-green-600"
+    : rateVal >= 60 ? "text-yellow-600"
+    : "text-red-600";
+
+  // 상단 진행 집계
+  const autoCount = data.ksItems.filter(i => i.autoCheckable).length;
+  const inspectorCount = data.ksItems.filter(i => !!i.userVerdict).length;
+  const pendingCount = data.ksItems.filter(i => i.verdict === "manual" && !i.userVerdict).length;
+
+  // 필터링
   const principles = ["all", ...Array.from(new Set(data.ksItems.map((i) => i.principle)))];
-  const verdicts = ["all", "fail", "review", "manual", "pass", "na"];
+  const afterPrinciple = filterPrinciple === "all"
+    ? data.ksItems
+    : data.ksItems.filter(i => i.principle === filterPrinciple);
+  const visible = applyQuickFilter(afterPrinciple, quickFilter);
 
-  const visible = data.ksItems.filter((item) => {
-    if (filterPrinciple !== "all" && item.principle !== filterPrinciple) return false;
-    const effectiveVerdict = item.userVerdict ?? item.verdict;
-    if (filterVerdict !== "all" && effectiveVerdict !== filterVerdict) return false;
-    return true;
-  });
-
-  // Group by category
-  const grouped = visible.reduce<Record<string, KsItemResult[]>>((acc, item) => {
+  // 카테고리별 그룹 (표시용 + 전체 통계용)
+  const allGrouped = data.ksItems.reduce<Record<string, KsItemResult[]>>((acc, item) => {
+    (acc[item.category] ??= []).push(item);
+    return acc;
+  }, {});
+  const visibleGrouped = visible.reduce<Record<string, KsItemResult[]>>((acc, item) => {
     (acc[item.category] ??= []).push(item);
     return acc;
   }, {});
@@ -314,53 +359,59 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* Summary */}
-        {(() => {
-          const score = calculateScore(data.ksItems);
-          const rateVal = score.rate;
-          const rateColor = rateVal === null ? "text-gray-400"
-            : rateVal >= 80 ? "text-green-600"
-            : rateVal >= 60 ? "text-yellow-600"
-            : "text-red-600";
-          return (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-              <h1 className="text-base font-bold text-gray-900 mb-1">KS X 3253:2016 접근성 검수 결과</h1>
-              <p className="text-sm text-gray-500 truncate mb-1">{data.source}</p>
-              <p className="text-xs text-gray-400 mb-4">
-                {new Date(data.auditDate).toLocaleString("ko-KR")} ·{" "}
-                {data.inputMode === "url" ? "URL 모드" : "파일 모드"} ·{" "}
-                CSS {data.cssAnalyzed ? "포함" : "미포함"}
+        {/* Summary card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <h1 className="text-base font-bold text-gray-900 mb-1">KS X 3253:2016 접근성 검수 결과</h1>
+          <p className="text-sm text-gray-500 truncate mb-1">{data.source}</p>
+          <p className="text-xs text-gray-400 mb-3">
+            {new Date(data.auditDate).toLocaleString("ko-KR")} ·{" "}
+            {data.inputMode === "url" ? "URL 모드" : "파일 모드"} ·{" "}
+            CSS {data.cssAnalyzed ? "포함" : "미포함"}
+          </p>
+
+          {/* 진행 표시 */}
+          <div className="mb-4 px-3 py-2 bg-purple-50 border border-purple-100 rounded-lg text-xs text-purple-800 flex flex-wrap gap-x-3 gap-y-1 items-center">
+            <span>진행:</span>
+            <span>자동 <strong>{autoCount}</strong>건</span>
+            <span>+ 검사자 <strong>{inspectorCount}</strong>건</span>
+            <span className="text-gray-400">/ {data.ksItems.length}건 전체</span>
+            {pendingCount > 0 && (
+              <span className="text-amber-700 font-medium">· 미입력 {pendingCount}건</span>
+            )}
+            <span className="ml-auto font-medium">
+              종합 적합률{" "}
+              <span className={rateColor}>
+                {rateVal !== null ? `${rateVal}%` : "—"}
+              </span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="bg-gray-50 rounded-xl p-3 text-center sm:col-span-1">
+              <p className={`text-2xl font-bold ${rateColor}`}>
+                {rateVal !== null ? `${rateVal}%` : "—"}
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {/* 적합률 카드 */}
-                <div className="bg-gray-50 rounded-xl p-3 text-center sm:col-span-1">
-                  <p className={`text-2xl font-bold ${rateColor}`}>
-                    {rateVal !== null ? `${rateVal}%` : "—"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">종합 적합률</p>
-                  <p className="text-[10px] text-gray-400 mt-1 leading-tight">
-                    ⓘ {score.formula}
-                    <br />검토·해당없음·미검사 제외
-                  </p>
-                </div>
-                {[
-                  { label: "✅ 적합",      value: score.passed,        color: "text-green-600" },
-                  { label: "❌ 부적합",    value: score.failed,        color: "text-red-600" },
-                  { label: "⚠️ 검토필요", value: score.review,        color: "text-yellow-600" },
-                  { label: "🔵 수동검사", value: score.manualPending,  color: "text-blue-600" },
-                ].map((s) => (
-                  <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
-                    <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-gray-500 mt-0.5">종합 적합률</p>
+              <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                ⓘ {score.formula}<br />검토·해당없음·미검사 제외
+              </p>
             </div>
-          );
-        })()}
+            {[
+              { label: "✅ 적합",      value: score.passed,       color: "text-green-600" },
+              { label: "❌ 부적합",    value: score.failed,       color: "text-red-600" },
+              { label: "⚠️ 검토필요", value: score.review,       color: "text-yellow-600" },
+              { label: "🔵 수동검사", value: score.manualPending, color: "text-blue-600" },
+            ].map((s) => (
+              <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Filters */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <select value={filterPrinciple} onChange={(e) => setFilterPrinciple(e.target.value)}
             className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
             {principles.map((p) => (
@@ -368,42 +419,64 @@ export default function ResultPage() {
             ))}
           </select>
           <div className="flex gap-1 flex-wrap">
-            {verdicts.map((v) => (
-              <button key={v} onClick={() => setFilterVerdict(v)}
+            {QUICK_FILTERS.map(({ key, label }) => (
+              <button key={key} type="button" onClick={() => setQuickFilter(key)}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  filterVerdict === v ? "bg-gray-800 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  quickFilter === key
+                    ? "bg-gray-800 text-white"
+                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}>
-                {v === "all" ? `전체 (${data.ksItems.length})` : (VERDICT_CHIP[v]?.label ?? v)}
+                {label(afterPrinciple)}
               </button>
             ))}
           </div>
         </div>
 
         {/* KS items grouped by category */}
-        {Object.entries(grouped).map(([category, items]) => (
-          <div key={category}>
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">
-              {category}
-            </h2>
-            <div className="space-y-2">
-              {items.map((item) => (
-                <KsItemCard
-                  key={item.code}
-                  item={item}
-                  onUserVerdict={(code, v) => updateItem(code, { userVerdict: v as "pass" | "fail" | "review" | "na" | undefined })}
-                  onUserNote={(code, n) => updateItem(code, { userNote: n })}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+        {Object.keys(allGrouped)
+          .filter(cat => visibleGrouped[cat])
+          .map((category) => {
+            const catItems = allGrouped[category];
+            const autoInCat = catItems.filter(i => i.autoCheckable).length;
+            const manualInCat = catItems.filter(i => !i.autoCheckable).length;
+            const inspectorInCat = catItems.filter(i => !!i.userVerdict).length;
+            const hasInspectorWork = inspectorInCat > 0;
+
+            return (
+              <div key={category}>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    {category}
+                  </h2>
+                  <span className="text-xs text-gray-400">
+                    자동 {autoInCat}
+                    {manualInCat > 0 && ` · 검사자 ${inspectorInCat}/${manualInCat}`}
+                    {hasInspectorWork && " ✍️"}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {visibleGrouped[category].map((item) => (
+                    <KsItemCard
+                      key={item.code}
+                      item={item}
+                      onUserVerdict={(code, v) => updateItem(code, {
+                        userVerdict: v,
+                        userInputAt: v ? new Date().toISOString() : undefined,
+                      })}
+                      onUserMemo={(code, n) => updateItem(code, { userMemo: n })}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
         {visible.length === 0 && (
           <p className="text-sm text-gray-400 text-center py-8">해당 항목이 없습니다.</p>
         )}
 
         <p className="text-center text-xs text-gray-400 pb-4">
-          KS X 3253:2016 · 34개 항목 (자동 12 · 수동 22) · 23개 룰 · fetch + cheerio
+          KS X 3253:2016 · 34개 항목 (자동 12 · 수동 22) · 26개 룰 · fetch + cheerio
         </p>
       </div>
     </div>

@@ -62,13 +62,15 @@ export async function generateExcel(data: AuditResponse): Promise<Buffer> {
     { header: "항목명",        key: "name",       width: 26 },
     { header: "심각도",        key: "severity",   width: 10 },
     { header: "검사 방식",     key: "checkType",  width: 12 },
-    { header: "판정",          key: "verdict",    width: 14 },
+    { header: "자동 판정",     key: "verdict",    width: 14 },
     { header: "신뢰도",        key: "confidence", width: 10 },
     { header: "위반 건수",     key: "count",      width: 10 },
-    { header: "사용자 판정",   key: "userVerdict",width: 12 },
-    { header: "메모",          key: "note",       width: 40 },
+    { header: "검사자 판정",   key: "userVerdict",width: 14 },
+    { header: "검사자 메모",   key: "userMemo",   width: 40 },
   ];
   headerRow(detail, detail.columns.map((c) => String(c.header ?? "")));
+
+  const INSPECTOR_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F0FF" } };
 
   data.ksItems.forEach((item: KsItemResult) => {
     const effectiveVerdict = item.userVerdict
@@ -86,12 +88,15 @@ export async function generateExcel(data: AuditResponse): Promise<Buffer> {
       confidence: item.confidence ?? (item.autoCheckable ? "" : "수동"),
       count: item.violations.length || "",
       userVerdict: item.userVerdict
-        ? (item.userVerdict === "pass" ? "✅ 적합" : item.userVerdict === "fail" ? "❌ 부적합" : "⚠️ 검토필요")
+        ? (item.userVerdict === "pass" ? "✅ 적합" : item.userVerdict === "fail" ? "❌ 부적합" : item.userVerdict === "na" ? "⬜ 해당없음" : "⚠️ 검토필요")
         : "",
-      note: item.userNote ?? "",
+      userMemo: item.userMemo ?? "",
     });
     const fill = VERDICT_FILL[effectiveVerdict] ?? VERDICT_FILL.na;
-    row.eachCell((cell) => { cell.fill = fill as ExcelJS.Fill; });
+    row.eachCell((cell, colNum) => {
+      // 검사자 판정(10)·검사자 메모(11) 열은 보라색 배경 우선
+      cell.fill = colNum >= 10 ? INSPECTOR_FILL : fill as ExcelJS.Fill;
+    });
     row.height = 18;
     row.alignment = { vertical: "middle", wrapText: true };
   });

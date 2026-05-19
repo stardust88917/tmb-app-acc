@@ -54,9 +54,10 @@ export interface KsItemResult {
   // 수동 검사 항목
   manualGuide?: ManualCheckGuide;
 
-  // 사용자 입력 (클라이언트측 수동 판정)
+  // 검사자 입력 (클라이언트측 수동 판정)
   userVerdict?: "pass" | "fail" | "review" | "na";
-  userNote?: string;
+  userMemo?: string;
+  userInputAt?: string;   // ISO — userVerdict 입력 시각
 }
 
 // ── 단일 페이지 API 응답 ───────────────────────────────────────────────────
