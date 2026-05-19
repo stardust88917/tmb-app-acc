@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { AuditResponse, KsItemResult, MultiAuditResponse } from "./types";
+import { calculateScore } from "./audit/scoring";
 
 const VERDICT_FILL: Record<string, Partial<ExcelJS.Fill>> = {
   fail:   { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE8E8" } },
@@ -8,6 +9,9 @@ const VERDICT_FILL: Record<string, Partial<ExcelJS.Fill>> = {
   manual: { type: "pattern", pattern: "solid", fgColor: { argb: "FFE3F2FD" } },
   na:     { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } },
 };
+
+const INSPECTOR_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F0FF" } };
+const MISMATCH_FILL:  ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
 
 const VERDICT_KO: Record<string, string> = {
   fail: "❌ 부적합", review: "⚠️ 검토필요", pass: "✅ 적합",
@@ -69,8 +73,6 @@ export async function generateExcel(data: AuditResponse): Promise<Buffer> {
     { header: "검사자 메모",   key: "userMemo",   width: 40 },
   ];
   headerRow(detail, detail.columns.map((c) => String(c.header ?? "")));
-
-  const INSPECTOR_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F0FF" } };
 
   data.ksItems.forEach((item: KsItemResult) => {
     const effectiveVerdict = item.userVerdict
@@ -189,6 +191,30 @@ export async function generateMultiExcel(data: MultiAuditResponse): Promise<Buff
     }
   }
 
+  // ── 검사자 입력 현황 ──────────────────────────────────────────────────────
+  const inspectorTotal = data.pages.reduce(
+    (acc, p) => acc + p.ksItems.filter((i) => !!i.userVerdict).length, 0
+  );
+  const adjustedScores = data.pages
+    .map((p) => calculateScore(p.ksItems).rate)
+    .filter((s): s is number => s !== null);
+  const adjustedOverall =
+    adjustedScores.length > 0
+      ? Math.round(Math.min(...adjustedScores) * 10) / 10
+      : null;
+
+  sum.addRow([]);
+  const inspectorHeader = sum.addRow(["─── 검사자 입력 현황 ───", ""]);
+  inspectorHeader.font = { bold: true, color: { argb: "FF6B21A8" } };
+  [
+    ["검사자 판정 완료", `${inspectorTotal}개 항목 (전체 페이지 합계)`],
+    ["검사자 반영 적합률 (최저)", adjustedOverall !== null ? `${adjustedOverall}%` : "산정 불가 (판정 없음)"],
+  ].forEach(([k, v]) => {
+    const r = sum.addRow({ k, v }); r.height = 18;
+    r.getCell("k").font = { bold: true };
+    r.eachCell((cell) => { cell.fill = INSPECTOR_FILL; });
+  });
+
   // ── Sheet 2: 일관성 결함 ───────────────────────────────────────────────
   const cons = wb.addWorksheet("⚠️ 일관성 결함");
   cons.columns = [
@@ -234,20 +260,81 @@ export async function generateMultiExcel(data: MultiAuditResponse): Promise<Buff
     const rowData: Record<string, string> = {
       code, prin: ksItem.principle, name: ksItem.name,
     };
-    data.pages.forEach((p, i) => {
-      const item = p.ksItems.find((ki) => ki.code === code);
-      rowData[`p${i}`] = VERDICT_KO[item?.userVerdict ?? item?.verdict ?? "na"] ?? "";
+    const pageItems = data.pages.map((p) => p.ksItems.find((ki) => ki.code === code));
+    pageItems.forEach((item, i) => {
+      const effective = item?.userVerdict ?? item?.verdict ?? "na";
+      const mark = item?.userVerdict ? " ✍️" : "";
+      rowData[`p${i}`] = (VERDICT_KO[effective] ?? "") + mark;
     });
     const r = detail.addRow(rowData);
     r.height = 18; r.alignment = { vertical: "middle", wrapText: true };
-    // 행 배경: 어느 페이지든 fail이면 연한 빨강
-    const hasFail = data.pages.some((p) =>
-      (p.ksItems.find((ki) => ki.code === code)?.verdict ?? "na") === "fail"
-    );
+    const hasFail = pageItems.some((item) => (item?.verdict ?? "na") === "fail");
     if (hasFail) r.eachCell((cell) => { cell.fill = VERDICT_FILL.fail as ExcelJS.Fill; });
+    // 검사자 판정 셀만 보라 배경 덮어쓰기 (3번째 컬럼부터 = 페이지 컬럼들)
+    pageItems.forEach((item, i) => {
+      if (item?.userVerdict) {
+        r.getCell(4 + i).fill = INSPECTOR_FILL;
+      }
+    });
   }
 
-  // ── Sheet 4: 전체 위반 상세 ────────────────────────────────────────────
+  // ── Sheet 4: 검사자 입력 ──────────────────────────────────────────────
+  const userInput = wb.addWorksheet("✍️ 검사자 입력");
+  userInput.columns = [
+    { header: "페이지",      key: "page",        width: 35 },
+    { header: "KS 코드",    key: "ksCode",      width: 10 },
+    { header: "항목명",      key: "name",        width: 28 },
+    { header: "자동 판정",  key: "autoVerdict", width: 14 },
+    { header: "검사자 판정", key: "userVerdict", width: 14 },
+    { header: "검사자 메모", key: "userMemo",    width: 50 },
+    { header: "입력일",      key: "inputAt",     width: 14 },
+  ];
+  // 헤더 행 스타일: 보라 배경 (columns에서 이미 값 설정됨)
+  const uiHeader = userInput.getRow(1);
+  uiHeader.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  uiHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6B21A8" } };
+  uiHeader.height = 22;
+  uiHeader.alignment = { vertical: "middle", horizontal: "center" };
+
+  let userInputRowCount = 0;
+  for (const page of data.pages) {
+    const lbl = pageLabel(page.source);
+    for (const item of page.ksItems) {
+      if (!item.userVerdict && !item.userMemo) continue;
+      const autoKO = VERDICT_KO[item.verdict] ?? item.verdict;
+      const userKO = item.userVerdict ? (VERDICT_KO[item.userVerdict] ?? item.userVerdict) : "";
+      const isMismatch = !!item.userVerdict && item.userVerdict !== item.verdict;
+      const r = userInput.addRow({
+        page: lbl,
+        ksCode: item.code,
+        name: item.name,
+        autoVerdict: autoKO,
+        userVerdict: userKO,
+        userMemo: item.userMemo ?? "",
+        inputAt: item.userInputAt
+          ? new Date(item.userInputAt).toLocaleDateString("ko-KR")
+          : "",
+      });
+      r.height = 20;
+      r.alignment = { vertical: "middle", wrapText: true };
+      if (isMismatch) {
+        // 자동 ↔ 검사자 판정 불일치: 전체 행 노란 배경
+        r.eachCell((cell) => { cell.fill = MISMATCH_FILL; });
+      }
+      // 검사자 판정·메모 열(E, F)은 보라 배경 덮어쓰기
+      r.getCell(5).fill = INSPECTOR_FILL;
+      r.getCell(6).fill = INSPECTOR_FILL;
+      userInputRowCount++;
+    }
+  }
+
+  // 검사자 입력이 없으면 안내 행 추가
+  if (userInputRowCount === 0) {
+    const noData = userInput.addRow({ page: "검사자 판정 또는 메모를 입력한 항목이 없습니다." });
+    noData.getCell(1).font = { italic: true, color: { argb: "FF9CA3AF" } };
+  }
+
+  // ── Sheet 5: 전체 위반 상세 ────────────────────────────────────────────
   const vio = wb.addWorksheet("🔍 위반 상세");
   vio.columns = [
     { header: "페이지",   key: "page",     width: 26 },
