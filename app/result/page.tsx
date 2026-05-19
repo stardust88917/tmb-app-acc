@@ -248,7 +248,15 @@ export default function ResultPage() {
   }
 
   async function handleDownload() {
-    const payload = multiData ?? data;
+    // sessionStorage는 MultiResultView·updateItem 양쪽이 매 변경 시 즉시 동기화함.
+    // multiData/data 상태는 MultiResultView 내부 변경을 반영하지 못하므로
+    // 항상 sessionStorage에서 최신 페이로드를 읽어 전송한다.
+    let payload: AuditResponse | MultiAuditResponse | null = null;
+    try {
+      const raw = sessionStorage.getItem("lastAuditResult");
+      if (raw) payload = JSON.parse(raw) as AuditResponse | MultiAuditResponse;
+    } catch { /* ignore */ }
+    payload ??= multiData ?? data;
     if (!payload) return;
     setDownloading(true);
     setDlError("");
